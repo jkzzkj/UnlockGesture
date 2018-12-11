@@ -3,7 +3,7 @@
 //  CSIGestureUnlock
 //
 //  Created by 蒋泽康 on 2018/11/28.
-//  Copyright © 2018 csizg. All rights reserved.
+//  Copyright © 2018 手势解锁. All rights reserved.
 //
 
 import UIKit
