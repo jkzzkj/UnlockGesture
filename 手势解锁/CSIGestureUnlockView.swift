@@ -47,8 +47,23 @@ class CSIGestureUnlockView: UIView {
         }
     }
     
+    /// 每个点错误的图片(画线且错误)
+    @IBInspectable var pointErrorImage: UIImage? {
+        didSet {
+            self.configUI()
+        }
+        
+    }
+    
     /// 画线的颜色
     @IBInspectable var lineColor: UIColor = .white {
+        didSet {
+            self.configUI()
+        }
+    }
+    
+    /// 错误样式，画线的颜色
+    @IBInspectable var errorLineColor: UIColor = RGB(r: 255, g: 70, b: 80) {
         didSet {
             self.configUI()
         }
@@ -101,8 +116,19 @@ class CSIGestureUnlockView: UIView {
     //路径
     private var path:UIBezierPath = UIBezierPath()
     
+    //是否是错误状态
+    private var isErrorState: Bool = false
+    
     //当前手指所在点
     var fingurePoint:CGPoint!
+    
+    //重写frame设置方法
+    override var frame:CGRect{
+        didSet {
+            self.configUI()
+            
+        }
+    }
 
     //MARK: - 重写初始化方法
     override init(frame: CGRect) {
@@ -128,76 +154,73 @@ class CSIGestureUnlockView: UIView {
         return super.point(inside: point, with: event)
     }
     
-    //MARK: - 界面frame改变 相应改变subViewFrame
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        
-        self.configUI()
-    }
-    
     //MARK: - 设置界面效果
     /// 设置界面效果
     private func configUI() {
-        if self.superview != nil {
-            for array in pointImageArray {
-                for item in array {
-                    item.removeFromSuperview()
-                }
-            }
-            
-            path.lineJoinStyle = .round
-            
-            pointImageArray.removeAll()
-            
-            let scale = scaleEnable ? UIScreen.main.bounds.width / 375.0 : 1
-            let realPointSize = CGSize(width: pointSize * scale, height: pointSize * scale)
-            
-            var realContentInset = UIEdgeInsets(top: contentInsets.top * scale, left: contentInsets.left * scale, bottom: contentInsets.bottom * scale, right: contentInsets.right * scale)
-            
-            if realContentInset == .zero {
-                if self.frame.width > self.frame.height {
-                    realContentInset = UIEdgeInsets(top: 0, left: (self.frame.width - self.frame.height) / 2, bottom: 0, right: (self.frame.width - self.frame.height) / 2)
-                } else {
-                    realContentInset = UIEdgeInsets(top: (self.frame.height - self.frame.width) / 2, left: 0, bottom: (self.frame.height - self.frame.width) / 2, right: 0)
+        DispatchQueue.main.async {
+            if self.superview != nil {
+                for array in self.pointImageArray {
+                    for item in array {
+                        item.removeFromSuperview()
+                    }
                 }
                 
-            }
-            
-            let drawWidth = (self.frame.size.width - realContentInset.left - realContentInset.right) > (self.frame.size.height - realContentInset.top - realContentInset.bottom) ? (self.frame.size.height - realContentInset.top - realContentInset.bottom) : (self.frame.size.width - realContentInset.left - realContentInset.right)
-            let realSpacing = (drawWidth - realPointSize.width * CGFloat(linePoint)) / CGFloat(linePoint - 1)
-            
-            for x in 0..<linePoint {
-                var array: [CSIGestureUnlockPointView] = []
-                for y in 0..<linePoint {
-                    let frame = CGRect(x: (realPointSize.width + realSpacing) * CGFloat(y) + realContentInset.left, y: (realPointSize.height + realSpacing) * CGFloat(x) + realContentInset.top, width: realPointSize.width, height: realPointSize.height)
-                    let view = CSIGestureUnlockPointView(frame: frame)
-                    view.pointTag = UnlockPointTag(x: x, y: y)
-                    view.selectState = false
-                    if let normalImage = self.pointImage {
-                        view.normalImage = normalImage
+                self.path.lineJoinStyle = .round
+                
+                self.pointImageArray.removeAll()
+                
+                let scale = self.scaleEnable ? UIScreen.main.bounds.width / 375.0 : 1
+                let realPointSize = CGSize(width: self.pointSize * scale, height: self.pointSize * scale)
+                
+                var realContentInset = UIEdgeInsets(top: self.contentInsets.top * scale, left: self.contentInsets.left * scale, bottom: self.contentInsets.bottom * scale, right: self.contentInsets.right * scale)
+                
+                if realContentInset == .zero {
+                    if self.frame.width > self.frame.height {
+                        realContentInset = UIEdgeInsets(top: 0, left: (self.frame.width - self.frame.height) / 2, bottom: 0, right: (self.frame.width - self.frame.height) / 2)
+                    } else {
+                        realContentInset = UIEdgeInsets(top: (self.frame.height - self.frame.width) / 2, left: 0, bottom: (self.frame.height - self.frame.width) / 2, right: 0)
                     }
-                    if let selectImage = self.pointSelectImage {
-                        view.selectImage = selectImage
-                    }
-                    for tag in selectPointArray {
-                        if tag.x == view.pointTag.x && tag.y == view.pointTag.y {
-                            view.selectState = true
-                            break
-                        }
-                    }
-                    self.addSubview(view)
-                    array.append(view)
+                    
                 }
-                pointImageArray.append(array)
+                
+                let drawWidth = (self.frame.size.width - realContentInset.left - realContentInset.right) > (self.frame.size.height - realContentInset.top - realContentInset.bottom) ? (self.frame.size.height - realContentInset.top - realContentInset.bottom) : (self.frame.size.width - realContentInset.left - realContentInset.right)
+                let realSpacing = (drawWidth - realPointSize.width * CGFloat(self.linePoint)) / CGFloat(self.linePoint - 1)
+                
+                for x in 0..<self.linePoint {
+                    var array: [CSIGestureUnlockPointView] = []
+                    for y in 0..<self.linePoint {
+                        let frame = CGRect(x: (realPointSize.width + realSpacing) * CGFloat(y) + realContentInset.left, y: (realPointSize.height + realSpacing) * CGFloat(x) + realContentInset.top, width: realPointSize.width, height: realPointSize.height)
+                        let view = CSIGestureUnlockPointView(frame: frame)
+                        view.pointTag = UnlockPointTag(x: x, y: y)
+                        view.selectState = false
+                        if let normalImage = self.pointImage {
+                            view.normalImage = normalImage
+                        }
+                        if let selectImage = self.pointSelectImage {
+                            view.selectImage = selectImage
+                        }
+                        for tag in self.selectPointArray {
+                            if tag.x == view.pointTag.x && tag.y == view.pointTag.y {
+                                view.selectState = true
+                                break
+                            }
+                        }
+                        self.addSubview(view)
+                        array.append(view)
+                    }
+                    self.pointImageArray.append(array)
+                }
+                
+                
             }
-            
-            
         }
     }
     
     ///MARK: - 恢复未选择手势样式
     /// 恢复未选择手势样式
     func resetNoSelectUI() {
+        self.isErrorState = false
+        
         for array in pointImageArray {
             for view in array {
                 view.selectState = false
@@ -210,6 +233,29 @@ class CSIGestureUnlockView: UIView {
         fingurePoint = CGPoint.zero
     }
     
+    ///MARK: - 设置解锁失败的样式
+    /// 设置解锁失败的样式  当匹配错误调用此方法即可
+    public func configErrorUI() {
+        DispatchQueue.main.async {
+            for array in self.pointImageArray {
+                for view in array {
+                    if view.selectState {
+                        view.configErrorMode()
+                    }
+                }
+            }
+            
+            self.isErrorState = true
+            self.setNeedsDisplay()
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                if self.isErrorState {
+                    self.resetNoSelectUI()
+                }
+            }
+        }
+    }
+ 
     //MARK: - 绘制
     override func draw(_ rect: CGRect)
     {
@@ -236,7 +282,7 @@ class CSIGestureUnlockView: UIView {
         }
         
         //设置线的颜色
-        let color = self.lineColor
+        let color = self.isErrorState ? self.errorLineColor : self.lineColor
         color.set()
         path.lineWidth = self.lineWidth
         path.stroke()
@@ -253,6 +299,8 @@ class CSIGestureUnlockView: UIView {
                 view.selectState = false
             }
         }
+        
+        self.isErrorState = false
         
         touchChanged(touch: touches.first!)
         
@@ -301,7 +349,7 @@ class CSIGestureUnlockView: UIView {
         self.fingurePoint = CGPoint.zero
         
         if (self.selectPointArray.count < minUnlockCount) {
-            self.resetNoSelectUI()
+            self.configErrorUI()
             delegate?.didFailUnlockGesture(error: .lessUnlockNum)
         } else {
             delegate?.didEndUnlockGesture(passwordTag: selectPointArray)
