@@ -16,6 +16,9 @@ class CSIGestureUnlockPointView: UIImageView {
     /// 默认图像
     var normalImage: UIImage? = CSIGestureUnlockPointView.drawNormalImage()
     
+    /// 错误图像
+    var errorImage: UIImage? = CSIGestureUnlockPointView.drawErrorImage()
+    
     /// 是否选中
     var selectState: Bool = false {
         didSet {
@@ -62,12 +65,12 @@ class CSIGestureUnlockPointView: UIImageView {
         
         if let context = UIGraphicsGetCurrentContext() {
             context.addEllipse(in: CGRect(x: 22 * scale, y: 22 * scale, width: 6 * scale, height: 6 * scale))
-            context.setFillColor(UIColor.white.cgColor)
+            context.setFillColor(RGB(r: 254, g: 199, b: 83).cgColor)
             context.fillPath()
             
             context.setLineWidth(1.0 * scale)
             context.addArc(center: CGPoint(x: 25 * scale, y: 25 * scale), radius: 24 * scale, startAngle: CGFloat(Double.pi * 2), endAngle: 0, clockwise: true)
-            context.setStrokeColor(UIColor.white.cgColor)
+            context.setStrokeColor(RGB(r: 254, g: 199, b: 83).cgColor)
             context.drawPath(using: .stroke)
         }
         
@@ -78,6 +81,41 @@ class CSIGestureUnlockPointView: UIImageView {
         UIGraphicsEndImageContext();
         
         return img ?? nil
+        
+    }
+    
+    /// 设置错误图像
+    ///
+    /// - Returns: 错误状态下的图像
+    private class func drawErrorImage() -> UIImage? {
+        let scale = UIScreen.main.scale;
+        let size = CGSize(width: 50 * scale, height: 50 * scale)
+        
+        UIGraphicsBeginImageContext(size)
+        
+        if let context = UIGraphicsGetCurrentContext() {
+            context.addEllipse(in: CGRect(x: 22 * scale, y: 22 * scale, width: 6 * scale, height: 6 * scale))
+            context.setFillColor(RGB(r: 255, g: 70, b: 80).cgColor)
+            context.fillPath()
+            
+            context.setLineWidth(1.0 * scale)
+            context.addArc(center: CGPoint(x: 25 * scale, y: 25 * scale), radius: 24 * scale, startAngle: CGFloat(Double.pi * 2), endAngle: 0, clockwise: true)
+            context.setStrokeColor(RGB(r: 255, g: 70, b: 80).cgColor)
+            context.drawPath(using: .stroke)
+        }
+        
+        // 从当前图形上下文中获取一张透明图片
+        let img = UIGraphicsGetImageFromCurrentImageContext();
+        
+        // 关闭图形绘制
+        UIGraphicsEndImageContext();
+        
+        return img ?? nil
+        
+    }
+    
+    public func configErrorMode() {
+         self.image = selectState ? self.errorImage : self.normalImage
         
     }
     
